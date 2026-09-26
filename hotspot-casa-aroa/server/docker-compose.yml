@@ -1,0 +1,15 @@
+# Ejecutar desde la carpeta hotspot-casa-aroa:  docker compose -f server/docker-compose.yml up -d
+services:
+  portal:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+    container_name: casa-aroa-portal
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "80:80"
+    sysctls:
+      - net.ipv4.ip_unprivileged_port_start=0
+    volumes:
+      - ./data:/app/server/data
