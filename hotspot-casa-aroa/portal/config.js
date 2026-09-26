@@ -18,15 +18,20 @@ window.PORTAL_CONFIG = {
 
   hotel: {
     name: "Casa Aroa",
-    city: "Barcelona",
-    stars: 5,
-    // Ruta a un logo (SVG/PNG). Vacío → se usa el logotipo tipográfico.
-    logo: "",
+    address: "Carrer del Dr. Joaquim Pou, 10 · 08002 Barcelona",
+    phone: "+34 935 971 799",
+    email: "info@casaaroahotel.com",
+    // Razón social y NIF para el texto de privacidad (pídelos a administración).
+    legalName: "",
+    taxId: "",
+    // Logo sobre la foto (versión blanca). En img/logo.svg está la versión marrón.
+    logo: "img/logo-white.svg",
   },
 
-  // Foto del panel lateral (p. ej. "img/hero.jpg"). Vacío → ilustración
-  // del trazado del Eixample de Cerdà.
-  heroImage: "",
+  // Foto del panel principal. Vacío → fondo liso en el marrón corporativo.
+  heroImage: "img/hero.jpg",
+  // Foto de la pantalla final. Vacío → no se muestra.
+  doneImage: "img/barri-gotic.jpg",
 
   // "auto" usa el idioma del dispositivo si está disponible.
   defaultLang: "auto",
@@ -42,37 +47,37 @@ window.PORTAL_CONFIG = {
   // una URL redirige allí; "original" vuelve a la web que pedía el huésped.
   redirectUrl: "",
 
-  // Tarjetas de la pantalla de "conectado". Texto por idioma. Edítalas con
-  // los servicios reales del hotel (y añade "href" si hay web/carta online).
+  // Tarjetas de la pantalla de "conectado". Texto por idioma; "href" opcional.
   services: [
     {
       icon: "bell",
+      href: "tel:+34935971799",
       title: { es: "Recepción", ca: "Recepció", en: "Reception", fr: "Réception" },
       text: {
-        es: "A su disposición las 24 horas.",
-        ca: "A la seva disposició les 24 hores.",
-        en: "At your service around the clock.",
-        fr: "À votre service 24 h/24.",
-      },
-    },
-    {
-      icon: "key",
-      title: { es: "Conserjería", ca: "Consergeria", en: "Concierge", fr: "Conciergerie" },
-      text: {
-        es: "Reservas, experiencias y rincones de Barcelona.",
-        ca: "Reserves, experiències i racons de Barcelona.",
-        en: "Reservations, experiences and hidden Barcelona.",
-        fr: "Réservations, expériences et Barcelone secrète.",
+        es: "Estamos aquí para lo que necesite · +34\u00a0935\u00a0971\u00a0799",
+        ca: "Som aquí per al que necessiteu · +34\u00a0935\u00a0971\u00a0799",
+        en: "We are here for anything you need · +34\u00a0935\u00a0971\u00a0799",
+        fr: "Nous sommes là pour tout ce dont vous avez besoin · +34\u00a0935\u00a0971\u00a0799",
       },
     },
     {
       icon: "cup",
-      title: { es: "Servicio de habitaciones", ca: "Servei d'habitacions", en: "In-room dining", fr: "Service en chambre" },
+      title: { es: "Desayuno", ca: "Esmorzar", en: "Breakfast", fr: "Petit-déjeuner" },
       text: {
-        es: "Pida desde su habitación cuando lo desee.",
-        ca: "Demani des de la seva habitació quan vulgui.",
-        en: "Order from your room whenever you wish.",
-        fr: "Commandez depuis votre chambre à tout moment.",
+        es: "Buffet de producto local y de temporada.",
+        ca: "Bufet de producte local i de temporada.",
+        en: "A buffet of local, seasonal produce.",
+        fr: "Un buffet de produits locaux et de saison.",
+      },
+    },
+    {
+      icon: "clock",
+      title: { es: "Early check-in y late check-out", ca: "Early check-in i late check-out", en: "Early check-in & late check-out", fr: "Arrivée anticipée et départ tardif" },
+      text: {
+        es: "Consulte la disponibilidad en recepción.",
+        ca: "Consulteu la disponibilitat a recepció.",
+        en: "Subject to availability — just ask at reception.",
+        fr: "Selon disponibilité, renseignez-vous à la réception.",
       },
     },
   ],

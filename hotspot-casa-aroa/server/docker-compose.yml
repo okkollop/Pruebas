@@ -1,4 +1,4 @@
-# Ejecutar desde la carpeta hotspot-casa-aroa:  docker compose -f server/docker-compose.yml up -d
+# Ejecutar desde la carpeta server/:  docker compose up -d --build
 services:
   portal:
     build:

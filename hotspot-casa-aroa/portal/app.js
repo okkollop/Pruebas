@@ -7,7 +7,10 @@
 
   var I18N = {
     es: {
-      heroQuote: "Un refugio sereno en el corazón del Eixample.",
+      kicker: "Aquí. Ahora.",
+      heroQuote: "Un hotel para vivir Barcelona con <em>presencia</em>",
+      hoodKicker: "Barri Gòtic",
+      hoodTitle: "A unos pasos de la Catedral",
       eyebrow: "Wi-Fi para huéspedes",
       title: "Bienvenidos a <em>Casa Aroa</em>",
       lead: "Conéctese en un instante y disfrute de internet de alta velocidad durante toda su estancia.",
@@ -24,7 +27,6 @@
       doneTitle: "Todo <em>listo</em>",
       doneLead: "Le deseamos una estancia inolvidable. Estamos a su disposición para cualquier cosa que necesite.",
       continue: "Continuar navegando",
-      footer: "© Hotel Casa Aroa · Barcelona",
       termsTitle: "Condiciones de uso",
       termsAccept: "Aceptar",
       errName: "Indíquenos su nombre, por favor.",
@@ -40,10 +42,13 @@
         "<h3>Servicio</h3><p>El hotel ofrece acceso a internet gratuito a sus huéspedes y visitantes. La velocidad y disponibilidad pueden variar y el servicio puede interrumpirse por mantenimiento.</p>" +
         "<h3>Uso responsable</h3><p>Queda prohibido utilizar la red para actividades ilícitas, vulnerar derechos de terceros, distribuir software malicioso o degradar el servicio del resto de usuarios. El hotel podrá limitar o suspender el acceso ante un uso indebido.</p>" +
         "<h3>Seguridad</h3><p>La red es compartida. Recomendamos utilizar conexiones cifradas (HTTPS, VPN) para información sensible. El hotel no se responsabiliza de pérdidas de datos o daños derivados del uso del servicio.</p>" +
-        "<h3>Protección de datos</h3><p>Responsable: Hotel Casa Aroa. Tratamos su nombre, habitación, correo (si lo facilita) y datos técnicos de su dispositivo para prestar y proteger el servicio y cumplir obligaciones legales. Las comunicaciones comerciales solo se enviarán con su consentimiento, que podrá retirar en cualquier momento. Puede ejercer sus derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad en recepción, y reclamar ante la AEPD.</p>",
+        "<h3>Protección de datos</h3><p>Responsable: {LEGAL}. Tratamos su nombre, habitación, correo (si lo facilita) y datos técnicos de su dispositivo para prestar y proteger el servicio y cumplir obligaciones legales. Las comunicaciones comerciales solo se enviarán con su consentimiento, que podrá retirar en cualquier momento. Puede ejercer sus derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad en recepción, y reclamar ante la AEPD.</p>",
     },
     ca: {
-      heroQuote: "Un refugi serè al cor de l'Eixample.",
+      kicker: "Aquí. Ara.",
+      heroQuote: "Un hotel per viure Barcelona amb <em>presència</em>",
+      hoodKicker: "Barri Gòtic",
+      hoodTitle: "A tocar de la Catedral",
       eyebrow: "Wi-Fi per a hostes",
       title: "Benvinguts a <em>Casa Aroa</em>",
       lead: "Connecteu-vos en un instant i gaudiu d'internet d'alta velocitat durant tota l'estada.",
@@ -60,7 +65,6 @@
       doneTitle: "Tot <em>a punt</em>",
       doneLead: "Us desitgem una estada inoblidable. Som a la vostra disposició per a qualsevol cosa que necessiteu.",
       continue: "Continuar navegant",
-      footer: "© Hotel Casa Aroa · Barcelona",
       termsTitle: "Condicions d'ús",
       termsAccept: "Acceptar",
       errName: "Indiqueu-nos el vostre nom, si us plau.",
@@ -76,10 +80,13 @@
         "<h3>Servei</h3><p>L'hotel ofereix accés gratuït a internet als seus hostes i visitants. La velocitat i la disponibilitat poden variar i el servei es pot interrompre per manteniment.</p>" +
         "<h3>Ús responsable</h3><p>Està prohibit utilitzar la xarxa per a activitats il·lícites, vulnerar drets de tercers, distribuir programari maliciós o degradar el servei de la resta d'usuaris. L'hotel podrà limitar o suspendre l'accés davant d'un ús indegut.</p>" +
         "<h3>Seguretat</h3><p>La xarxa és compartida. Recomanem utilitzar connexions xifrades (HTTPS, VPN) per a informació sensible. L'hotel no es responsabilitza de pèrdues de dades o danys derivats de l'ús del servei.</p>" +
-        "<h3>Protecció de dades</h3><p>Responsable: Hotel Casa Aroa. Tractem el vostre nom, habitació, correu (si el faciliteu) i dades tècniques del dispositiu per prestar i protegir el servei i complir obligacions legals. Les comunicacions comercials només s'enviaran amb el vostre consentiment, que podreu retirar en qualsevol moment. Podeu exercir els drets d'accés, rectificació, supressió, oposició, limitació i portabilitat a recepció, i reclamar davant l'AEPD.</p>",
+        "<h3>Protecció de dades</h3><p>Responsable: {LEGAL}. Tractem el vostre nom, habitació, correu (si el faciliteu) i dades tècniques del dispositiu per prestar i protegir el servei i complir obligacions legals. Les comunicacions comercials només s'enviaran amb el vostre consentiment, que podreu retirar en qualsevol moment. Podeu exercir els drets d'accés, rectificació, supressió, oposició, limitació i portabilitat a recepció, i reclamar davant l'AEPD.</p>",
     },
     en: {
-      heroQuote: "A serene retreat in the heart of the Eixample.",
+      kicker: "Here. Now.",
+      heroQuote: "A hotel to experience Barcelona with <em>presence</em>",
+      hoodKicker: "Gothic Quarter",
+      hoodTitle: "Steps from the Cathedral",
       eyebrow: "Guest Wi-Fi",
       title: "Welcome to <em>Casa Aroa</em>",
       lead: "Connect in a moment and enjoy high-speed internet throughout your stay.",
@@ -96,7 +103,6 @@
       doneTitle: "You're <em>all set</em>",
       doneLead: "We wish you an unforgettable stay. We are at your disposal for anything you may need.",
       continue: "Continue browsing",
-      footer: "© Hotel Casa Aroa · Barcelona",
       termsTitle: "Terms of use",
       termsAccept: "Accept",
       errName: "Please tell us your name.",
@@ -112,10 +118,13 @@
         "<h3>Service</h3><p>The hotel provides free internet access to its guests and visitors. Speed and availability may vary and the service may be interrupted for maintenance.</p>" +
         "<h3>Acceptable use</h3><p>The network must not be used for unlawful activities, to infringe third-party rights, to distribute malicious software or to degrade the service for other users. The hotel may limit or suspend access in case of misuse.</p>" +
         "<h3>Security</h3><p>This is a shared network. We recommend encrypted connections (HTTPS, VPN) for sensitive information. The hotel is not liable for data loss or damage arising from use of the service.</p>" +
-        "<h3>Data protection</h3><p>Controller: Hotel Casa Aroa. We process your name, room, email (if provided) and technical device data to deliver and secure the service and to meet legal obligations. Marketing communications are only sent with your consent, which you may withdraw at any time. You may exercise your rights of access, rectification, erasure, objection, restriction and portability at reception, and lodge a complaint with the Spanish Data Protection Agency (AEPD).</p>",
+        "<h3>Data protection</h3><p>Controller: {LEGAL}. We process your name, room, email (if provided) and technical device data to deliver and secure the service and to meet legal obligations. Marketing communications are only sent with your consent, which you may withdraw at any time. You may exercise your rights of access, rectification, erasure, objection, restriction and portability at reception, and lodge a complaint with the Spanish Data Protection Agency (AEPD).</p>",
     },
     fr: {
-      heroQuote: "Un refuge serein au cœur de l'Eixample.",
+      kicker: "Ici. Maintenant.",
+      heroQuote: "Un hôtel pour vivre Barcelone avec <em>présence</em>",
+      hoodKicker: "Quartier gothique",
+      hoodTitle: "À deux pas de la cathédrale",
       eyebrow: "Wi-Fi clients",
       title: "Bienvenue à <em>Casa Aroa</em>",
       lead: "Connectez-vous en un instant et profitez d'un internet haut débit pendant tout votre séjour.",
@@ -132,7 +141,6 @@
       doneTitle: "Tout est <em>prêt</em>",
       doneLead: "Nous vous souhaitons un séjour inoubliable. Nous restons à votre disposition pour tout ce dont vous auriez besoin.",
       continue: "Continuer la navigation",
-      footer: "© Hotel Casa Aroa · Barcelone",
       termsTitle: "Conditions d'utilisation",
       termsAccept: "Accepter",
       errName: "Merci d'indiquer votre nom.",
@@ -148,7 +156,7 @@
         "<h3>Service</h3><p>L'hôtel met gratuitement un accès internet à la disposition de ses clients et visiteurs. Le débit et la disponibilité peuvent varier et le service peut être interrompu pour maintenance.</p>" +
         "<h3>Usage responsable</h3><p>Il est interdit d'utiliser le réseau à des fins illicites, de porter atteinte aux droits de tiers, de diffuser des logiciels malveillants ou de dégrader le service des autres utilisateurs. L'hôtel peut limiter ou suspendre l'accès en cas d'abus.</p>" +
         "<h3>Sécurité</h3><p>Le réseau est partagé. Nous recommandons des connexions chiffrées (HTTPS, VPN) pour les informations sensibles. L'hôtel décline toute responsabilité en cas de perte de données ou de dommages liés à l'utilisation du service.</p>" +
-        "<h3>Protection des données</h3><p>Responsable : Hotel Casa Aroa. Nous traitons votre nom, votre chambre, votre e-mail (s'il est fourni) et des données techniques de l'appareil pour fournir et sécuriser le service et respecter nos obligations légales. Les communications commerciales ne sont envoyées qu'avec votre consentement, révocable à tout moment. Vous pouvez exercer vos droits d'accès, de rectification, d'effacement, d'opposition, de limitation et de portabilité à la réception, et saisir l'AEPD.</p>",
+        "<h3>Protection des données</h3><p>Responsable : {LEGAL}. Nous traitons votre nom, votre chambre, votre e-mail (s'il est fourni) et des données techniques de l'appareil pour fournir et sécuriser le service et respecter nos obligations légales. Les communications commerciales ne sont envoyées qu'avec votre consentement, révocable à tout moment. Vous pouvez exercer vos droits d'accès, de rectification, d'effacement, d'opposition, de limitation et de portabilité à la réception, et saisir l'AEPD.</p>",
     },
   };
 
@@ -160,6 +168,7 @@
     spa: '<path d="M12 20c-4-2-7-5-7-9 3 0 5 1 7 3 2-2 4-3 7-3 0 4-3 7-7 9zM12 14V4M9 7l3-3 3 3"/>',
     fork: '<path d="M7 3v8a2 2 0 0 0 4 0V3M9 11v10M17 3c-2 0-3 3-3 6s1 4 3 4v8"/>',
     map: '<path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14"/>',
+    clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
     star: '<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>',
   };
 
@@ -194,6 +203,7 @@
     document.documentElement.lang = lang;
     document.querySelectorAll("[data-i18n]").forEach(function (el) { el.textContent = t(el.getAttribute("data-i18n")); });
     document.querySelectorAll("[data-i18n-html]").forEach(function (el) { el.innerHTML = t(el.getAttribute("data-i18n-html")); });
+    $("termsBody").innerHTML = t("termsBody").replace("{LEGAL}", legalLine());
     document.querySelectorAll("#langs button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.lang === lang)); });
     renderServices();
     var err = $("error");
@@ -213,15 +223,19 @@
     });
   }
 
+  function esc(v) {
+    return String(v || "").replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; });
+  }
+
+  function legalLine() {
+    var h = CFG.hotel || {};
+    var parts = [h.legalName || "Hotel " + (h.name || ""), h.taxId, h.address, h.email];
+    return esc(parts.filter(Boolean).join(", "));
+  }
+
   function renderBrand() {
     var h = CFG.hotel || {};
-    $("stars").textContent = new Array((h.stars || 5) + 1).join("★");
-    if (h.logo) {
-      var img = new Image();
-      img.alt = "Hotel " + (h.name || "");
-      img.src = h.logo;
-      $("brand").replaceChildren(img);
-    }
+    if (h.logo) $("heroLogo").src = h.logo;
     if (CFG.heroImage) {
       var pre = new Image();
       pre.onload = function () {
@@ -231,6 +245,17 @@
       };
       pre.src = CFG.heroImage;
     }
+    if (CFG.doneImage) $("postcard").querySelector("img").src = CFG.doneImage;
+    else $("postcard").hidden = true;
+
+    var foot = $("foot");
+    foot.innerHTML = "";
+    [h.address, h.phone, h.email].filter(Boolean).forEach(function (txt, i) {
+      if (i) foot.appendChild(document.createTextNode(" · "));
+      var span = document.createElement("span");
+      span.textContent = txt;
+      foot.appendChild(span);
+    });
   }
 
   function renderServices() {

@@ -3,68 +3,31 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#1c1a17">
+  <meta name="theme-color" content="#2e1704">
   <meta name="robots" content="noindex, nofollow">
   <title>Casa Aroa · Wi-Fi</title>
-  <link rel="preload" href="fonts/cormorant-garamond-latin-300-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="fonts/jost-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/cormorant-garamond-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/montserrat-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="img/hero.jpg" as="image">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="shell">
 
-    <!-- Panel visual -->
-    <aside class="hero" aria-hidden="true">
-      <div class="hero-art">
-        <svg class="eixample" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice">
-          <defs>
-            <!-- Manzana del Eixample: cuadrado con chaflanes (Ildefons Cerdà, 1859) -->
-            <pattern id="illa" width="64" height="64" patternUnits="userSpaceOnUse" patternTransform="rotate(-44 400 500)">
-              <path d="M17 6 H47 L58 17 V47 L47 58 H17 L6 47 V17 Z" fill="none" stroke="currentColor" stroke-width=".7"/>
-              <path d="M22 16 H42 L48 22 V42 L42 48 H22 L16 42 V22 Z" fill="currentColor" opacity=".06"/>
-            </pattern>
-            <linearGradient id="dusk" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#1c1a17"/>
-              <stop offset=".55" stop-color="#2a2420"/>
-              <stop offset="1" stop-color="#3b2d24"/>
-            </linearGradient>
-            <radialGradient id="glow" cx=".78" cy=".86" r=".7">
-              <stop offset="0" stop-color="#c39a6b" stop-opacity=".35"/>
-              <stop offset="1" stop-color="#c39a6b" stop-opacity="0"/>
-            </radialGradient>
-            <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#fff" stop-opacity="0"/>
-              <stop offset=".35" stop-color="#fff" stop-opacity=".9"/>
-              <stop offset="1" stop-color="#fff" stop-opacity=".45"/>
-            </linearGradient>
-            <mask id="fadeMask"><rect width="800" height="1000" fill="url(#fade)"/></mask>
-          </defs>
-          <rect width="800" height="1000" fill="url(#dusk)"/>
-          <rect width="800" height="1000" fill="url(#glow)"/>
-          <g mask="url(#fadeMask)" color="#c9a77c" opacity=".55">
-            <rect width="800" height="1000" fill="url(#illa)"/>
-          </g>
-          <!-- Avinguda Diagonal -->
-          <line x1="-40" y1="840" x2="860" y2="360" stroke="#c9a77c" stroke-width="1.2" opacity=".7"/>
-          <line x1="-40" y1="852" x2="860" y2="372" stroke="#c9a77c" stroke-width=".5" opacity=".45"/>
-          <circle class="pin" cx="498" cy="575" r="5" fill="none" stroke="#e6cfa8" stroke-width="1"/>
-          <circle class="pin" cx="498" cy="575" r="1.8" fill="#e6cfa8"/>
-        </svg>
-        <div class="hero-photo" id="heroPhoto"></div>
-      </div>
+    <!-- Panel visual: recepción del hotel -->
+    <aside class="hero" id="hero">
+      <div class="hero-photo" id="heroPhoto"></div>
+      <div class="hero-shade"></div>
       <div class="hero-copy">
-        <p class="hero-coords">41°23′ N &nbsp;·&nbsp; 2°10′ E</p>
-        <p class="hero-quote" data-i18n="heroQuote"></p>
+        <p class="hero-kicker" data-i18n="kicker"></p>
+        <img class="hero-logo" id="heroLogo" src="img/logo-white.svg" alt="Casa Aroa Barcelona">
+        <p class="hero-quote" data-i18n-html="heroQuote"></p>
       </div>
     </aside>
 
     <!-- Contenido -->
     <main class="panel">
       <header class="top">
-        <div class="brand" id="brand">
-          <span class="brand-mark">Casa Aroa</span>
-          <span class="brand-sub"><span class="stars" id="stars"></span><span class="brand-city">Barcelona</span></span>
-        </div>
         <nav class="langs" id="langs" aria-label="Language"></nav>
       </header>
 
@@ -126,13 +89,20 @@
         <p class="eyebrow center" data-i18n="doneEyebrow"></p>
         <h1 class="title center" data-i18n-html="doneTitle"></h1>
         <p class="lead center" data-i18n="doneLead"></p>
+
+        <figure class="postcard" id="postcard">
+          <img src="img/barri-gotic.jpg" alt="" loading="lazy">
+          <figcaption>
+            <span class="postcard-kicker" data-i18n="hoodKicker"></span>
+            <span class="postcard-title" data-i18n="hoodTitle"></span>
+          </figcaption>
+        </figure>
+
         <ul class="services" id="services"></ul>
         <a class="cta ghost" id="continue" href="#" hidden><span data-i18n="continue"></span><svg class="cta-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg></a>
       </section>
 
-      <footer class="foot">
-        <span data-i18n="footer"></span>
-      </footer>
+      <footer class="foot" id="foot"></footer>
     </main>
   </div>
 
@@ -142,7 +112,7 @@
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="termsTitle">
       <button class="modal-x" type="button" data-close aria-label="Cerrar">&times;</button>
       <h2 id="termsTitle" data-i18n="termsTitle"></h2>
-      <div class="modal-body" data-i18n-html="termsBody"></div>
+      <div class="modal-body" id="termsBody"></div>
       <button class="cta small" type="button" id="acceptTerms"><span data-i18n="termsAccept"></span></button>
     </div>
   </div>
