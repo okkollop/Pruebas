@@ -216,8 +216,34 @@ const server = http.createServer((req, res) => {
   serveStatic(req, res, pathname);
 });
 
+server.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.error("ERROR: el puerto " + CONFIG.port + " ya está en uso (¿el servidor web del NAS?). Usa una IP propia para el contenedor o cambia PORT.");
+  } else if (err.code === "EACCES") {
+    console.error("ERROR: sin permiso para abrir el puerto " + CONFIG.port + ". Ejecuta el contenedor como root o usa un puerto > 1024.");
+  } else {
+    console.error("ERROR al arrancar el servidor:", err.message);
+  }
+  process.exit(1);
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("ERROR inesperado:", err && err.stack ? err.stack : err);
+});
+process.on("unhandledRejection", (err) => {
+  console.error("ERROR inesperado (promesa):", err && err.message ? err.message : err);
+});
+
+if (!fs.existsSync(path.join(CONFIG.portalDir, "index.html"))) {
+  console.error("AVISO: no encuentro " + path.join(CONFIG.portalDir, "index.html") + ". Revisa que la carpeta portal/ está junto a server/.");
+}
+if (!fs.existsSync(path.join(__dirname, ".env"))) {
+  console.warn("AVISO: no hay fichero .env en " + __dirname + " (copia .env.example como .env).");
+}
+
 server.listen(CONFIG.port, () => {
   console.log("Portal Casa Aroa escuchando en :" + CONFIG.port + (CONFIG.dryRun ? " (DRY_RUN: no se autoriza en UniFi)" : ""));
+  console.log("UDM: " + unifi.host + ":" + unifi.port + " · usuario: " + (unifi.username || "(vacío)") + " · portal: " + CONFIG.portalDir);
   if (!CONFIG.dryRun && (!unifi.username || !unifi.password)) {
     console.warn("Aviso: faltan UNIFI_USER / UNIFI_PASS en .env");
   }

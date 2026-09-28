@@ -18,7 +18,19 @@ services:
     container_name: casa-aroa-portal
     restart: unless-stopped
     working_dir: /app/server
-    command: ["node", "server.js"]
+    # Si faltan ficheros, muestra qué hay montado y espera (en vez de reiniciarse en bucle).
+    command:
+      - sh
+      - -c
+      - |
+        if [ ! -f /app/server/server.js ] || [ ! -f /app/portal/index.html ]; then
+          echo "ERROR: no encuentro /app/server/server.js o /app/portal/index.html"
+          echo "Revisa las rutas de 'volumes'. Contenido montado:"
+          ls -la /app/server /app/portal
+          echo "(¿hay una carpeta de más, p. ej. hotspot-casa-aroa/, dentro de casa-aroa-portal?)"
+          sleep 86400
+        fi
+        exec node server.js
     environment:
       - TZ=Europe/Madrid
       - PORT=80
