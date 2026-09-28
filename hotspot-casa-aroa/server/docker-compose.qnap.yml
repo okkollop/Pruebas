@@ -1,0 +1,43 @@
+# Hotel Casa Aroa · Portal WiFi — QNAP Container Station (Aplicaciones → Crear)
+#
+# El contenedor recibe SU PROPIA IP en la red del hotel (driver "qnet" de QNAP),
+# así no choca con el puerto 80 del propio NAS.
+#
+# Antes de usarlo, cambia:
+#   1. ipv4_address  → IP libre para el portal, fuera del rango DHCP (p. ej. 192.168.1.10)
+#   2. subnet / gateway → los de tu red (gateway = IP del UDM Pro)
+#   3. iface → interfaz de red del NAS (eth0 normalmente; mírala en Red y conmutador virtual)
+#   4. Las rutas /share/Container/casa-aroa-portal si subiste la carpeta a otro sitio
+#
+# No hace falta construir imagen: usa node:22-alpine y monta las carpetas del proyecto.
+# La configuración se lee de /share/Container/casa-aroa-portal/server/.env
+
+services:
+  portal:
+    image: node:22-alpine
+    container_name: casa-aroa-portal
+    restart: unless-stopped
+    working_dir: /app/server
+    command: ["node", "server.js"]
+    environment:
+      - TZ=Europe/Madrid
+      - PORT=80
+    volumes:
+      - /share/Container/casa-aroa-portal/portal:/app/portal:ro
+      - /share/Container/casa-aroa-portal/server:/app/server
+    networks:
+      lan:
+        ipv4_address: 192.168.1.10
+
+networks:
+  lan:
+    driver: qnet
+    driver_opts:
+      iface: "eth0"
+    ipam:
+      driver: qnet
+      options:
+        iface: "eth0"
+      config:
+        - subnet: 192.168.1.0/24
+          gateway: 192.168.1.1

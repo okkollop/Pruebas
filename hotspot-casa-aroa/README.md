@@ -94,6 +94,8 @@ journalctl -u casa-aroa-portal -f
 **Comprobación:** desde un ordenador de la red abre `http://192.168.1.10/guest/s/default/?id=aa:bb:cc:dd:ee:ff`. Debe aparecer el portal.
 Para probar sin tocar UniFi: pon `DRY_RUN=true` en `.env`.
 
+**C) En un NAS QNAP (Container Station)**: ver la sección [Instalación en QNAP](#instalación-en-qnap) más abajo.
+
 ### Paso 4 · Configurar UniFi Network (UDM Pro)
 Los nombres del menú cambian un poco según la versión de Network. Busca **Hotspot / Guest Portal**:
 
@@ -124,6 +126,43 @@ Otras variables de `.env`:
 
 ### Actualizar el diseño más adelante
 Edita los ficheros de `portal/` y reinicia: `docker compose up -d --build` o `sudo systemctl restart casa-aroa-portal`.
+
+---
+
+## Instalación en QNAP
+
+En QNAP el puerto 80 suele estar ocupado por el propio NAS (QTS / Web Server). Por eso el contenedor recibe **su propia IP en la red** con el driver `qnet` de Container Station. Para UniFi es un equipo más (`192.168.1.10`) y no toca nada del NAS. El fichero listo es `server/docker-compose.qnap.yml`.
+
+1. **Container Station**: instálala desde App Center (versión 3 o superior).
+2. **Elegir la IP del portal**: una IP libre **fuera del rango DHCP** del UDM (p. ej. `192.168.1.10`). Para comprobar el rango: *UniFi → Settings → Networks → (red) → DHCP Range*.
+3. **Subir los ficheros**: con File Station, crea `Container/casa-aroa-portal` y sube dentro las carpetas `portal` y `server` del ZIP. Tienen que quedar así:
+   ```
+   /share/Container/casa-aroa-portal/portal/index.html
+   /share/Container/casa-aroa-portal/server/server.js
+   ```
+4. **Configurar `.env`**: en `server/`, copia `.env.example` como `.env` (File Station → Copiar → renombrar) y edítalo (clic derecho → *Abrir con editor de texto*):
+   ```ini
+   UNIFI_HOST=192.168.1.1
+   UNIFI_USER=portal
+   UNIFI_PASS=la-contraseña
+   GUEST_MINUTES=4320
+   ```
+   No cambies `PORT`: el compose ya fija el 80.
+5. **Revisar la interfaz de red**: en *Panel de control → Red y conmutador virtual → Interfaces*, mira qué adaptador está conectado a la LAN del hotel (normalmente `eth0`, "Adaptador 1").
+6. **Crear la aplicación**: *Container Station → Aplicaciones → Crear*, nombre `casa-aroa-portal`. Pega el contenido de `server/docker-compose.qnap.yml` y ajusta:
+   - `ipv4_address`: la IP del paso 2.
+   - `subnet` y `gateway`: los de tu red (el gateway es la IP del UDM).
+   - `iface`, las **dos** veces que aparece: la interfaz del paso 5.
+
+   Pulsa **Validar** y después **Crear**. Descargará `node:22-alpine` y arrancará.
+7. **Comprobar**: en *Contenedores → casa-aroa-portal → Registros* debe salir `Portal Casa Aroa escuchando en :80`. Desde **otro** ordenador (no desde el propio NAS) abre `http://192.168.1.10/guest/s/default/?id=aa:bb:cc:dd:ee:ff`.
+   > Con redes `qnet`/macvlan, el NAS no puede hablar con su propio contenedor por esa IP. Es normal: pruébalo desde otro equipo.
+8. **Configurar UniFi**: sigue el [Paso 4](#paso-4--configurar-unifi-network-udm-pro) con la IP `192.168.1.10`.
+
+**Cambios posteriores**: si editas ficheros de `portal/` o `.env`, reinicia el contenedor (*Contenedores → casa-aroa-portal → Reiniciar*). No hay que reconstruir nada.
+**Registro de huéspedes**: `/share/Container/casa-aroa-portal/server/data/guests.jsonl`.
+
+**Alternativa sin IP propia**: si el puerto 80 del NAS está libre (*Panel de control → Aplicaciones → Servidor web* desactivado y el puerto de administración de QTS distinto de 80), puedes quitar la sección `networks` y poner `ports: ["80:80"]`. Entonces el portal usa la IP del NAS.
 
 ---
 
