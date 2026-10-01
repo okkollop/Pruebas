@@ -1,0 +1,930 @@
+<title>Finanzas de Casa</title>
+<meta name="description" content="Ahorro y gastos de casa por años">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a household ledger. Sticky top bar with year + section tabs, then summary tiles,
+   charts, and an editable month grid per section. Ahorro = green ink, Gastos = amber ink. */
+:root {
+  --bg: #f3f5f4;
+  --surface: #fcfcfb;
+  --surface-2: #eceff0;
+  --line: #d9dedc;
+  --fg: #14201c;
+  --fg-2: #4d5955;
+  --fg-3: #7a8581;
+  --ahorro: #0f7a5f;
+  --ahorro-soft: #dcefe8;
+  --gastos: #b8640a;
+  --gastos-soft: #f6e8d6;
+  --neg: #c23b3b;
+  --neg-soft: #f8e1e0;
+  --focus: #2a78d6;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300; --s7:#4a3aa7; --s8:#e34948; --sother:#9aa3a0;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1412; --surface: #171d1b; --surface-2: #1f2724; --line: #2c3633;
+    --fg: #eef3f1; --fg-2: #b5c0bc; --fg-3: #85918d;
+    --ahorro: #3cc49a; --ahorro-soft: #173229; --gastos: #f0a24a; --gastos-soft: #352612;
+    --neg: #ef7b7b; --neg-soft: #3a1d1d; --focus: #5d9ff0;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767; --sother:#6c7673;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1412; --surface: #171d1b; --surface-2: #1f2724; --line: #2c3633;
+  --fg: #eef3f1; --fg-2: #b5c0bc; --fg-3: #85918d;
+  --ahorro: #3cc49a; --ahorro-soft: #173229; --gastos: #f0a24a; --gastos-soft: #352612;
+  --neg: #ef7b7b; --neg-soft: #3a1d1d; --focus: #5d9ff0;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767; --sother:#6c7673;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 14px; line-height: 1.45; margin: 0; }
+table, input, select, button { font: inherit; color: inherit; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* Top bar */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.top-in { max-width: 1280px; margin: 0 auto; padding: 12px 20px; display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; }
+.brand { display: flex; align-items: baseline; gap: 10px; margin-right: auto; }
+.brand h1 { font-size: 22px; font-weight: 700; }
+.brand .sync { font-size: 12px; color: var(--fg-3); display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--fg-3); display: inline-block; }
+.dot.ok { background: var(--ahorro); } .dot.busy { background: var(--gastos); } .dot.err { background: var(--neg); }
+.tabs { display: flex; gap: 4px; background: var(--surface-2); padding: 4px; border-radius: 999px; }
+.tab { border: 0; background: transparent; padding: 7px 16px; border-radius: 999px; cursor: pointer; font-weight: 500; color: var(--fg-2); }
+.tab[aria-selected="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgb(0 0 0 / .12); }
+.tab[data-tab="ahorro"][aria-selected="true"] { color: var(--ahorro); }
+.tab[data-tab="gastos"][aria-selected="true"] { color: var(--gastos); }
+.yearbox { display: flex; gap: 8px; align-items: center; }
+.yearbox select { padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); font-family: var(--font-mono); font-weight: 500; }
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 7px 12px; border-radius: 8px; cursor: pointer; font-weight: 500; white-space: nowrap; }
+.btn:hover { border-color: var(--fg-3); }
+.btn.primary { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.btn.ghost { border-color: transparent; background: transparent; color: var(--fg-2); }
+.btn.danger { color: var(--neg); }
+.btn.sm { padding: 4px 9px; font-size: 13px; }
+
+main { max-width: 1280px; margin: 0 auto; padding-block: 20px 60px; padding-inline: 20px; display: grid; gap: 20px; }
+.section-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 8px 16px; }
+.section-head h2 { font-size: 30px; font-weight: 700; }
+.section-head p { margin: 2px 0 0; color: var(--fg-2); max-width: 70ch; }
+.eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; }
+[data-sec="ahorro"] .section-head h2 { color: var(--ahorro); }
+[data-sec="gastos"] .section-head h2 { color: var(--gastos); }
+
+/* KPI tiles */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; display: grid; gap: 4px; min-width: 0; }
+.kpi .label { font-size: 12px; color: var(--fg-2); font-weight: 500; }
+.kpi .value { font-family: var(--font-mono); font-size: 24px; font-weight: 500; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kpi .sub { font-size: 12px; color: var(--fg-3); }
+.kpi.hero { background: var(--ahorro-soft); border-color: transparent; }
+.kpi.hero .value { color: var(--ahorro); }
+.kpi.hero-g { background: var(--gastos-soft); border-color: transparent; }
+.kpi.hero-g .value { color: var(--gastos); }
+.pill { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 999px; font-family: var(--font-mono); width: fit-content; }
+.pill.up { background: var(--neg-soft); color: var(--neg); }
+.pill.down { background: var(--ahorro-soft); color: var(--ahorro); }
+.pill.neutral { background: var(--surface-2); color: var(--fg-2); }
+
+/* Panels & charts */
+.grid-2 { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; }
+.grid-2.even { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+@media (max-width: 900px) { .grid-2, .grid-2.even { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; min-width: 0; display: grid; gap: 12px; align-content: start; }
+.panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 12px; }
+.panel-head h3 { font-size: 16px; font-weight: 600; }
+.panel-head .hint { font-size: 12px; color: var(--fg-3); }
+.chart { position: relative; height: 280px; }
+.chart.tall { height: 340px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--fg-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+/* Editable grid */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+table.grid { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1100px; font-size: 13px; }
+.grid th, .grid td { padding: 0; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+.grid thead th { background: var(--surface-2); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--fg-2); padding: 8px 6px; font-weight: 600; position: sticky; top: 0; }
+.grid thead th.cur { color: var(--fg); box-shadow: inset 0 -2px 0 var(--fg); }
+.grid th:first-child, .grid td:first-child { text-align: left; position: sticky; left: 0; background: var(--surface); z-index: 1; min-width: 170px; }
+.grid thead th:first-child { background: var(--surface-2); z-index: 2; }
+.grid td.calc { padding: 7px 8px; font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--fg); font-weight: 500; }
+.grid tfoot td { background: var(--surface-2); font-weight: 600; }
+.grid tfoot td:first-child { background: var(--surface-2); padding: 7px 8px; }
+.grid tfoot tr.strong td { color: var(--fg); }
+.grid input { width: 100%; min-width: 66px; border: 0; background: transparent; padding: 7px 6px; text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; border-radius: 0; }
+.grid input.name { text-align: left; font-family: var(--font-body); font-weight: 500; min-width: 140px; }
+.grid input:hover { background: var(--surface-2); }
+.grid input:focus { background: var(--surface); outline: 2px solid var(--focus); outline-offset: -2px; }
+.grid input.zero { color: var(--fg-3); }
+.grid td.cur { background: color-mix(in srgb, var(--fg) 4%, transparent); }
+.grid .rowname { display: flex; align-items: center; gap: 2px; padding-left: 8px; }
+.grid .swatch { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+.grid .del { border: 0; background: transparent; color: var(--fg-3); cursor: pointer; padding: 4px 8px; font-size: 16px; line-height: 1; border-radius: 6px; }
+.grid .del:hover { color: var(--neg); background: var(--neg-soft); }
+.neg { color: var(--neg) !important; }
+.pos { color: var(--ahorro) !important; }
+table.simple { min-width: 560px; }
+.grid select { border: 0; background: transparent; padding: 7px 6px; width: 100%; }
+.grid td.left { text-align: left; }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.filler { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; padding: 12px; background: var(--surface-2); border-radius: 8px; }
+.field { display: grid; gap: 3px; font-size: 12px; color: var(--fg-2); }
+.field input, .field select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); min-width: 0; }
+.field input.amt { width: 110px; font-family: var(--font-mono); }
+.muted { color: var(--fg-3); font-size: 12px; }
+
+/* Empty state */
+.empty { background: var(--surface); border: 1px dashed var(--line); border-radius: var(--radius); padding: 40px 24px; text-align: center; display: grid; gap: 12px; justify-items: center; }
+.empty h2 { font-size: 22px; }
+.empty p { color: var(--fg-2); max-width: 52ch; margin: 0; }
+
+/* Modal */
+.modal-bg { position: fixed; inset: 0; background: rgb(0 0 0 / .45); display: grid; place-items: center; z-index: 50; padding: 16px; }
+.modal { background: var(--surface); border-radius: 14px; padding: 20px; width: min(460px, 100%); display: grid; gap: 14px; box-shadow: 0 20px 50px rgb(0 0 0 / .3); }
+.modal h3 { font-size: 20px; }
+.modal .row { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 13px; }
+.yearchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 12px; cursor: pointer; font-family: var(--font-mono); font-size: 13px; display: inline-flex; gap: 6px; align-items: center; }
+.chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.chip i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 9px 16px; border-radius: 999px; font-size: 13px; z-index: 60; }
+@media (max-width: 560px) {
+  .top-in { padding: 10px 16px; } main { padding-inline: 16px; }
+  .section-head h2 { font-size: 24px; }
+  .kpi .value { font-size: 20px; }
+  .tab { padding: 6px 11px; }
+}
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <h1>Finanzas de Casa</h1>
+      <span class="sync" id="sync"><span class="dot" id="syncDot"></span><span id="syncText">Cargando…</span></span>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Secciones">
+      <button class="tab" role="tab" data-tab="ahorro" aria-selected="true" id="tab-ahorro">Ahorro</button>
+      <button class="tab" role="tab" data-tab="gastos" aria-selected="false" id="tab-gastos">Gastos</button>
+      <button class="tab" role="tab" data-tab="comparar" aria-selected="false" id="tab-comparar">Comparativa</button>
+    </nav>
+    <div class="yearbox">
+      <label for="yearSel" class="muted">Año</label>
+      <select id="yearSel" aria-label="Año"></select>
+      <button class="btn" id="newYearBtn">+ Año</button>
+      <button class="btn ghost" id="moreBtn" aria-haspopup="true">Datos</button>
+    </div>
+  </div>
+</header>
+
+<main id="main"></main>
+<input type="file" id="importFile" accept="application/json,.json" hidden>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+(() => {
+'use strict';
+const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const MESES_L = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const LS_KEY = 'finanzas-casa-v1';
+const LS_UI = 'finanzas-casa-ui';
+const fmt = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2, minimumFractionDigits: 2, useGrouping: 'always' });
+const fmt0 = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0, useGrouping: 'always' });
+const fmtN = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 2, minimumFractionDigits: 0 });
+const eur = v => fmt.format(v || 0);
+const eur0 = v => fmt0.format(v || 0);
+const r2 = v => Math.round((v + Number.EPSILON) * 100) / 100;
+const sum = a => r2(a.reduce((s, v) => s + (+v || 0), 0));
+const uid = p => p + '-' + Math.random().toString(36).slice(2, 9);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const parseNum = s => { if (typeof s === 'number') return s; s = String(s || '').trim().replace(/\s|€/g, ''); if (!s) return 0; if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.'); const v = parseFloat(s); return isFinite(v) ? r2(v) : 0; };
+const inVal = v => v ? fmtN.format(v) : '';
+const normName = s => String(s || '').trim().toUpperCase().replace(/\s+/g, ' ');
+const NOW = new Date();
+
+/* ---------- State ---------- */
+const S = {
+  years: {},            // "2026" -> {year, ahorro:{concepts, retiradas}, gastos:{concepts}}
+  year: null,
+  tab: 'ahorro',
+  compareSel: null,     // array of year strings
+  mode: 'local',        // 'local' | 'db'
+  db: null,
+  downloads: null,
+  pending: {},          // year -> pending write count
+  ready: false,
+};
+try { const ui = JSON.parse(localStorage.getItem(LS_UI) || '{}'); if (ui.tab) S.tab = ui.tab; if (ui.year) S.year = String(ui.year); } catch (e) {}
+const saveUI = () => { try { localStorage.setItem(LS_UI, JSON.stringify({ tab: S.tab, year: S.year })); } catch (e) {} };
+
+function normalizeYear(d, y) {
+  d = d || {};
+  const pad = m => Array.from({ length: 12 }, (_, i) => r2(+((m || [])[i]) || 0));
+  return {
+    year: +(d.year || y),
+    ahorro: {
+      concepts: ((d.ahorro && d.ahorro.concepts) || []).map(c => ({ id: c.id || uid('a'), name: c.name || '', saldo: r2(+c.saldo || 0), m: pad(c.m) })),
+      retiradas: ((d.ahorro && d.ahorro.retiradas) || []).map(r => ({ id: r.id || uid('r'), desc: r.desc || '', fondo: r.fondo || '', month: Math.min(11, Math.max(0, +r.month || 0)), amount: r2(+r.amount || 0) })),
+    },
+    gastos: { concepts: ((d.gastos && d.gastos.concepts) || []).map(c => ({ id: c.id || uid('g'), name: c.name || '', m: pad(c.m) })) },
+  };
+}
+const yearList = () => Object.keys(S.years).sort();
+const Y = () => S.years[S.year];
+
+/* ---------- Persistence ---------- */
+function setSync(state, text) {
+  document.getElementById('syncDot').className = 'dot ' + state;
+  document.getElementById('syncText').textContent = text;
+}
+const timers = {}; const chains = {};
+function scheduleSave(year) {
+  year = String(year);
+  if (S.mode === 'local') { saveLocal(); return; }
+  S.pending[year] = (S.pending[year] || 0) + 1;
+  setSync('busy', 'Guardando…');
+  clearTimeout(timers[year]);
+  timers[year] = setTimeout(() => {
+    const data = S.years[year];
+    chains[year] = (chains[year] || Promise.resolve()).then(async () => {
+      try {
+        if (data) await S.db.doc('years/' + year).set(JSON.parse(JSON.stringify(data)));
+        setSync('ok', 'Guardado');
+      } catch (e) {
+        setSync('err', e && e.code === 'invalid_argument' ? 'Sin permiso para guardar' : 'No se pudo guardar');
+        toast('No se pudo guardar. Revisa la conexión e inténtalo de nuevo.');
+      } finally { S.pending[year] = 0; }
+    });
+  }, 700);
+}
+function saveLocal() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(S.years)); setSync('ok', 'Guardado en este navegador'); }
+  catch (e) { setSync('err', 'No se pudo guardar'); }
+}
+async function deleteYearStore(year) {
+  delete S.years[year];
+  if (S.mode === 'local') { saveLocal(); return; }
+  clearTimeout(timers[year]);
+  try { await S.db.doc('years/' + year).delete(); setSync('ok', 'Guardado'); } catch (e) { toast('No se pudo borrar el año.'); }
+}
+
+async function initStore() {
+  let db = null;
+  try { if (window.claude && window.claude.use) db = await window.claude.use('db'); } catch (e) { db = null; }
+  try { if (window.claude && window.claude.use) S.downloads = await window.claude.use('downloads'); } catch (e) {}
+  if (db) {
+    S.mode = 'db'; S.db = db;
+    setSync('busy', 'Conectando…');
+    db.collection('years').onSnapshot(snap => {
+      let changed = false;
+      const seen = new Set();
+      snap.docs.forEach(doc => {
+        seen.add(doc.id);
+        if (S.pending[doc.id] > 0) return;
+        const next = normalizeYear(doc.data(), doc.id);
+        if (JSON.stringify(next) !== JSON.stringify(S.years[doc.id])) { S.years[doc.id] = next; changed = true; }
+      });
+      Object.keys(S.years).forEach(k => { if (!seen.has(k) && !(S.pending[k] > 0)) { delete S.years[k]; changed = true; } });
+      if (!S.ready || changed) { S.ready = true; afterDataChange(); }
+      if (!snap.metadata.fromCache) setSync('ok', 'Sincronizado');
+    }, () => setSync('err', 'Sin conexión con los datos'));
+  } else {
+    S.mode = 'local';
+    try { const raw = JSON.parse(localStorage.getItem(LS_KEY) || '{}'); Object.keys(raw).forEach(k => S.years[k] = normalizeYear(raw[k], k)); } catch (e) {}
+    S.ready = true;
+    setSync('ok', 'Guardado en este navegador');
+    afterDataChange();
+  }
+}
+function afterDataChange() {
+  const ys = yearList();
+  if (!S.years[S.year]) S.year = ys.includes(String(NOW.getFullYear())) ? String(NOW.getFullYear()) : (ys[ys.length - 1] || null);
+  if (!S.compareSel) S.compareSel = ys.slice(-4);
+  S.compareSel = S.compareSel.filter(y => S.years[y]);
+  if (!S.compareSel.length) S.compareSel = ys.slice(-4);
+  renderYearSel();
+  render();
+}
+
+/* ---------- Calculations ---------- */
+function calcAhorro(d) {
+  const cs = d.ahorro.concepts, rs = d.ahorro.retiradas;
+  const aport = MESES.map((_, i) => sum(cs.map(c => c.m[i])));
+  const retir = MESES.map((_, i) => sum(rs.filter(r => r.month === i).map(r => r.amount)));
+  const neto = aport.map((a, i) => r2(a - retir[i]));
+  const saldoIni = sum(cs.map(c => c.saldo));
+  const acum = []; neto.reduce((s, v, i) => (acum[i] = r2(s + v)), saldoIni);
+  const fondos = cs.map(c => {
+    const aportado = sum(c.m), retirado = sum(rs.filter(r => r.fondo === c.id).map(r => r.amount));
+    return { id: c.id, name: c.name, saldo: c.saldo, aportado, retirado, final: r2(c.saldo + aportado - retirado) };
+  });
+  const sinFondo = sum(rs.filter(r => !cs.some(c => c.id === r.fondo)).map(r => r.amount));
+  return { aport, retir, neto, saldoIni, acum, fondos, sinFondo, totAport: sum(aport), totRetir: sum(retir), final: acum[11] ?? saldoIni };
+}
+function calcGastos(d) {
+  const cs = d.gastos.concepts;
+  const mes = MESES.map((_, i) => sum(cs.map(c => c.m[i])));
+  const porConcepto = cs.map(c => ({ id: c.id, name: c.name, total: sum(c.m) }));
+  return { mes, porConcepto, total: sum(mes) };
+}
+
+/* ---------- Theme helpers for charts ---------- */
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const SERIES = () => ['--s1','--s2','--s3','--s4','--s5','--s6','--s7','--s8'].map(css);
+function chartBase() {
+  return {
+    responsive: true, maintainAspectRatio: false, animation: { duration: 250 },
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: css('--surface'), titleColor: css('--fg'), bodyColor: css('--fg-2'), borderColor: css('--line'), borderWidth: 1,
+        padding: 10, boxPadding: 4, usePointStyle: true,
+        titleFont: { family: 'IBM Plex Sans', weight: '600' }, bodyFont: { family: 'IBM Plex Mono' },
+        callbacks: { label: c => ` ${c.dataset.label}: ${eur(c.parsed.y ?? c.parsed.x)}` },
+      },
+    },
+    scales: {
+      x: { grid: { display: false }, border: { color: css('--line') }, ticks: { color: css('--fg-2'), font: { family: 'IBM Plex Sans', size: 11 } } },
+      y: { grid: { color: css('--line'), drawTicks: false }, border: { display: false }, ticks: { color: css('--fg-3'), padding: 8, font: { family: 'IBM Plex Mono', size: 11 }, callback: v => eur0(v) } },
+    },
+  };
+}
+const charts = {};
+function mountChart(key, canvasId, config) {
+  if (charts[key]) { charts[key].destroy(); delete charts[key]; }
+  const el = document.getElementById(canvasId);
+  if (!el || !window.Chart) return;
+  charts[key] = new Chart(el, config);
+}
+function destroyCharts() { Object.keys(charts).forEach(k => { charts[k].destroy(); delete charts[k]; }); }
+
+/* ---------- Render: chrome ---------- */
+function renderYearSel() {
+  const sel = document.getElementById('yearSel');
+  const ys = yearList();
+  sel.innerHTML = ys.length ? ys.map(y => `<option value="${y}" ${y === S.year ? 'selected' : ''}>${y}</option>`).join('') : '<option>—</option>';
+  sel.disabled = !ys.length;
+}
+function renderTabs() {
+  document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.tab === S.tab)));
+}
+function render() {
+  renderTabs();
+  destroyCharts();
+  const main = document.getElementById('main');
+  if (!S.ready) { main.innerHTML = ''; return; }
+  if (!yearList().length) { main.innerHTML = emptyHTML(); bindEmpty(); return; }
+  if (S.tab === 'ahorro') renderAhorro(main);
+  else if (S.tab === 'gastos') renderGastos(main);
+  else renderComparar(main);
+}
+function emptyHTML() {
+  return `<section class="empty">
+    <span class="eyebrow">Sin datos todavía</span>
+    <h2>Aquí verás tu ahorro y tus gastos por meses</h2>
+    <p>Cada año guarda sus fondos de ahorro (con lo que apartas cada mes y lo que retiras) y los gastos fijos de casa. Crea el primer año para empezar, o importa un archivo de datos.</p>
+    <div class="toolbar"><button class="btn primary" id="emptyNew">Crear año ${NOW.getFullYear()}</button><button class="btn" id="emptyImport">Importar datos (.json)</button></div>
+  </section>`;
+}
+function bindEmpty() {
+  document.getElementById('emptyNew').onclick = () => openNewYear();
+  document.getElementById('emptyImport').onclick = () => document.getElementById('importFile').click();
+}
+const curMonthIdx = () => (S.year && +S.year === NOW.getFullYear()) ? NOW.getMonth() : -1;
+
+/* ---------- AHORRO ---------- */
+function renderAhorro(main) {
+  const d = Y(); const cm = curMonthIdx();
+  main.innerHTML = `
+  <section data-sec="ahorro" style="display:grid;gap:20px">
+    <div class="section-head">
+      <div><span class="eyebrow">Ahorro ${S.year}</span><h2>Fondos de ahorro</h2>
+      <p>Cada fondo tiene un saldo inicial y una aportación mensual. Las retiradas son los pagos que salen del fondo cuando llega el gasto.</p></div>
+    </div>
+    <div class="kpis" id="a-kpis"></div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-head"><h3>Saldo acumulado mes a mes</h3><span class="hint">Saldo inicial + aportaciones − retiradas</span></div>
+        <div class="chart"><canvas id="c-saldo" aria-label="Saldo acumulado por mes"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Saldo de cada fondo a final de año</h3></div>
+        <div class="chart"><canvas id="c-fondos" aria-label="Saldo final por fondo"></canvas></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>Aportaciones y retiradas por mes</h3><div class="legend" id="a-legend"></div></div>
+      <div class="chart tall"><canvas id="c-aport" aria-label="Aportaciones por fondo y retiradas por mes"></canvas></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>Aportación mensual por fondo</h3><span class="hint">Haz clic en cualquier celda para cambiar el importe</span></div>
+      <div class="filler" id="a-filler">
+        <div class="field"><label for="af-c">Fondo</label><select id="af-c"></select></div>
+        <div class="field"><label for="af-amt">Importe a ahorrar en el periodo</label><input id="af-amt" class="amt" inputmode="decimal" placeholder="4.000"></div>
+        <div class="field"><label for="af-from">Desde</label><select id="af-from">${MESES_L.map((m, i) => `<option value="${i}">${m}</option>`).join('')}</select></div>
+        <div class="field"><label for="af-to">Hasta</label><select id="af-to">${MESES_L.map((m, i) => `<option value="${i}" ${i === 11 ? 'selected' : ''}>${m}</option>`).join('')}</select></div>
+        <button class="btn primary" id="af-go">Repartir en meses</button>
+        <span class="muted" id="af-prev"></span>
+      </div>
+      <div class="table-wrap"><table class="grid" id="a-table"></table></div>
+      <div class="toolbar"><button class="btn" id="a-add">+ Añadir fondo</button></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>Retiradas del año</h3><span class="hint">Lo que sale de cada fondo y en qué mes</span></div>
+      <div class="table-wrap"><table class="grid simple" id="r-table"></table></div>
+      <div class="toolbar"><button class="btn" id="r-add">+ Añadir retirada</button></div>
+    </div>
+  </section>`;
+  buildAhorroTable(); buildRetiradas(); fillAhorroSelect();
+  document.getElementById('a-add').onclick = () => { d.ahorro.concepts.push({ id: uid('a'), name: 'Nuevo fondo', saldo: 0, m: Array(12).fill(0) }); scheduleSave(S.year); buildAhorroTable(); fillAhorroSelect(); buildRetiradas(); refreshAhorro(); focusLast('#a-table tbody tr:last-child input.name'); };
+  document.getElementById('r-add').onclick = () => { d.ahorro.retiradas.push({ id: uid('r'), desc: '', fondo: d.ahorro.concepts[0]?.id || '', month: Math.max(0, cm), amount: 0 }); scheduleSave(S.year); buildRetiradas(); refreshAhorro(); focusLast('#r-table tbody tr:last-child input.name'); };
+  const prev = () => { const a = parseNum(document.getElementById('af-amt').value), f = +document.getElementById('af-from').value, t = +document.getElementById('af-to').value; const n = t - f + 1; document.getElementById('af-prev').textContent = a && n > 0 ? `${eur(a / n)} al mes durante ${n} ${n === 1 ? 'mes' : 'meses'}` : ''; };
+  ['af-amt', 'af-from', 'af-to'].forEach(id => document.getElementById(id).addEventListener('input', prev));
+  document.getElementById('af-go').onclick = () => {
+    const c = d.ahorro.concepts.find(x => x.id === document.getElementById('af-c').value);
+    const a = parseNum(document.getElementById('af-amt').value), f = +document.getElementById('af-from').value, t = +document.getElementById('af-to').value;
+    if (!c) return toast('Elige un fondo.');
+    if (!a || t < f) return toast('Escribe un importe y un periodo válido.');
+    const n = t - f + 1, per = r2(a / n);
+    for (let i = f; i <= t; i++) c.m[i] = per;
+    c.m[t] = r2(c.m[t] + (a - per * n)); // cuadra el redondeo en el último mes
+    scheduleSave(S.year); buildAhorroTable(); refreshAhorro(); toast(`${c.name}: ${eur(per)} al mes`);
+  };
+  refreshAhorro();
+}
+function fillAhorroSelect() {
+  const s = document.getElementById('af-c'); if (!s) return;
+  s.innerHTML = Y().ahorro.concepts.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+}
+function colorFor(i) { const s = SERIES(); return i < 7 ? s[i] : css('--sother'); }
+function buildAhorroTable() {
+  const d = Y(), cm = curMonthIdx();
+  const t = document.getElementById('a-table');
+  const th = MESES.map((m, i) => `<th class="${i === cm ? 'cur' : ''}">${m}</th>`).join('');
+  t.innerHTML = `<thead><tr><th>Fondo</th><th>Saldo inicial</th>${th}<th>Aportado</th><th>Retirado</th><th>Saldo final</th><th></th></tr></thead>
+  <tbody>${d.ahorro.concepts.map((c, ci) => `<tr data-id="${c.id}">
+    <td><div class="rowname"><span class="swatch" style="background:${colorFor(ci)}"></span><input class="name" data-f="name" value="${esc(c.name)}" aria-label="Nombre del fondo"></div></td>
+    <td><input data-f="saldo" inputmode="decimal" value="${inVal(c.saldo)}" class="${c.saldo ? '' : 'zero'}" placeholder="0" aria-label="Saldo inicial de ${esc(c.name)}"></td>
+    ${c.m.map((v, i) => `<td class="${i === cm ? 'cur' : ''}"><input data-f="m" data-i="${i}" inputmode="decimal" value="${inVal(v)}" placeholder="0" aria-label="${esc(c.name)} ${MESES_L[i]}"></td>`).join('')}
+    <td class="calc" data-k="aportado"></td><td class="calc" data-k="retirado"></td><td class="calc" data-k="final"></td>
+    <td><button class="del" title="Eliminar fondo" aria-label="Eliminar ${esc(c.name)}">×</button></td></tr>`).join('')}</tbody>
+  <tfoot>
+    <tr><td>Aportación del mes</td><td class="calc" id="a-ft-saldo"></td>${MESES.map((_, i) => `<td class="calc" data-ft="aport" data-i="${i}"></td>`).join('')}<td class="calc" id="a-ft-aport"></td><td class="calc" id="a-ft-ret"></td><td class="calc" id="a-ft-fin"></td><td></td></tr>
+    <tr><td>Retiradas del mes</td><td class="calc"></td>${MESES.map((_, i) => `<td class="calc neg" data-ft="retir" data-i="${i}"></td>`).join('')}<td colspan="4"></td></tr>
+    <tr><td>Neto del mes</td><td class="calc"></td>${MESES.map((_, i) => `<td class="calc" data-ft="neto" data-i="${i}"></td>`).join('')}<td colspan="4"></td></tr>
+    <tr class="strong"><td>Saldo acumulado</td><td class="calc"></td>${MESES.map((_, i) => `<td class="calc" data-ft="acum" data-i="${i}"></td>`).join('')}<td colspan="4"></td></tr>
+  </tfoot>`;
+  t.querySelectorAll('tbody tr').forEach(tr => {
+    const c = d.ahorro.concepts.find(x => x.id === tr.dataset.id);
+    tr.addEventListener('input', e => {
+      const el = e.target; if (!el.dataset.f) return;
+      if (el.dataset.f === 'name') { c.name = el.value; fillAhorroSelect(); refreshRetiradaFondos(); }
+      else if (el.dataset.f === 'saldo') c.saldo = parseNum(el.value);
+      else c.m[+el.dataset.i] = parseNum(el.value);
+      el.classList.toggle('zero', el.dataset.f !== 'name' && !parseNum(el.value));
+      scheduleSave(S.year); refreshAhorro();
+    });
+    tr.querySelector('.del').onclick = () => confirmBox(`¿Eliminar el fondo «${c.name}»?`, 'Se borran sus importes de este año. Las retiradas asociadas quedan sin fondo.', 'Eliminar', () => {
+      d.ahorro.concepts = d.ahorro.concepts.filter(x => x !== c); scheduleSave(S.year); buildAhorroTable(); fillAhorroSelect(); buildRetiradas(); refreshAhorro();
+    });
+  });
+  bindGridNav(t);
+}
+function retFondoOptions(sel) {
+  const cs = Y().ahorro.concepts;
+  return `<option value="" ${!cs.some(c => c.id === sel) ? 'selected' : ''}>Sin fondo</option>` + cs.map(c => `<option value="${c.id}" ${c.id === sel ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
+}
+function refreshRetiradaFondos() { document.querySelectorAll('#r-table select[data-f="fondo"]').forEach(s => { const v = s.value; s.innerHTML = retFondoOptions(v); }); }
+function buildRetiradas() {
+  const d = Y();
+  const t = document.getElementById('r-table');
+  const rows = d.ahorro.retiradas.slice().sort((a, b) => a.month - b.month);
+  t.innerHTML = `<thead><tr><th>Concepto</th><th style="text-align:left">Fondo</th><th style="text-align:left">Mes</th><th>Importe</th><th></th></tr></thead>
+  <tbody>${rows.map(r => `<tr data-id="${r.id}">
+    <td><div class="rowname"><input class="name" data-f="desc" value="${esc(r.desc)}" placeholder="Ej. Viaje" aria-label="Concepto de la retirada"></div></td>
+    <td class="left"><select data-f="fondo" aria-label="Fondo">${retFondoOptions(r.fondo)}</select></td>
+    <td class="left"><select data-f="month" aria-label="Mes">${MESES_L.map((m, i) => `<option value="${i}" ${i === r.month ? 'selected' : ''}>${m}</option>`).join('')}</select></td>
+    <td><input data-f="amount" inputmode="decimal" value="${inVal(r.amount)}" placeholder="0" aria-label="Importe"></td>
+    <td><button class="del" title="Eliminar retirada" aria-label="Eliminar retirada">×</button></td></tr>`).join('') || `<tr><td colspan="5" class="calc" style="text-align:left;color:var(--fg-3)">No hay retiradas este año. Añade una cuando pagues algo con el dinero de un fondo.</td></tr>`}</tbody>
+  <tfoot><tr><td>Total retirado</td><td></td><td></td><td class="calc neg" id="r-total"></td><td></td></tr></tfoot>`;
+  t.querySelectorAll('tbody tr[data-id]').forEach(tr => {
+    const r = d.ahorro.retiradas.find(x => x.id === tr.dataset.id);
+    const upd = e => {
+      const el = e.target; if (!el.dataset.f) return;
+      if (el.dataset.f === 'desc') r.desc = el.value;
+      else if (el.dataset.f === 'fondo') r.fondo = el.value;
+      else if (el.dataset.f === 'month') r.month = +el.value;
+      else r.amount = parseNum(el.value);
+      scheduleSave(S.year); refreshAhorro();
+    };
+    tr.addEventListener('input', upd);
+    tr.addEventListener('change', e => { if (e.target.dataset.f === 'month') buildRetiradas(); });
+    tr.querySelector('.del').onclick = () => { d.ahorro.retiradas = d.ahorro.retiradas.filter(x => x !== r); scheduleSave(S.year); buildRetiradas(); refreshAhorro(); };
+  });
+}
+function refreshAhorro() {
+  const d = Y(); const A = calcAhorro(d); const cm = curMonthIdx();
+  // KPIs
+  const media = A.totAport / 12;
+  const hoy = cm >= 0 ? A.acum[cm] : null;
+  const minI = A.acum.indexOf(Math.min(...A.acum));
+  document.getElementById('a-kpis').innerHTML = `
+    <div class="kpi hero"><span class="label">Saldo a final de año</span><span class="value">${eur(A.final)}</span><span class="sub">Empezaste con ${eur(A.saldoIni)}</span></div>
+    <div class="kpi"><span class="label">Aportas en el año</span><span class="value">${eur(A.totAport)}</span><span class="sub">${eur(media)} al mes de media</span></div>
+    <div class="kpi"><span class="label">Retiras en el año</span><span class="value">${eur(A.totRetir)}</span><span class="sub">${d.ahorro.retiradas.length} pagos desde los fondos</span></div>
+    ${hoy !== null ? `<div class="kpi"><span class="label">Saldo previsto a fin de ${MESES_L[cm].toLowerCase()}</span><span class="value">${eur(hoy)}</span><span class="sub">Mes en curso</span></div>` :
+      `<div class="kpi"><span class="label">Mes con menos saldo</span><span class="value ${A.acum[minI] < 0 ? 'neg' : ''}">${eur(A.acum[minI])}</span><span class="sub">${MESES_L[minI]}</span></div>`}
+    <div class="kpi"><span class="label">Aportación de ${cm >= 0 ? MESES_L[cm].toLowerCase() : 'enero'}</span><span class="value">${eur(A.aport[Math.max(cm, 0)])}</span><span class="sub">Lo que toca apartar ese mes</span></div>`;
+  // table computed cells
+  const t = document.getElementById('a-table');
+  if (t) {
+    A.fondos.forEach(f => { const tr = t.querySelector(`tr[data-id="${f.id}"]`); if (!tr) return;
+      tr.querySelector('[data-k="aportado"]').textContent = eur(f.aportado);
+      tr.querySelector('[data-k="retirado"]').textContent = f.retirado ? '−' + eur(f.retirado) : '—';
+      const fin = tr.querySelector('[data-k="final"]'); fin.textContent = eur(f.final); fin.classList.toggle('neg', f.final < 0); });
+    t.querySelectorAll('[data-ft]').forEach(td => { const i = +td.dataset.i, k = td.dataset.ft;
+      const v = k === 'retir' ? -A.retir[i] : A[k][i]; td.textContent = v ? eur(v) : '—'; if (k === 'neto' || k === 'acum') td.classList.toggle('neg', v < 0); });
+    document.getElementById('a-ft-saldo').textContent = eur(A.saldoIni);
+    document.getElementById('a-ft-aport').textContent = eur(A.totAport);
+    document.getElementById('a-ft-ret').textContent = '−' + eur(A.totRetir);
+    document.getElementById('a-ft-fin').textContent = eur(A.final);
+  }
+  const rt = document.getElementById('r-total'); if (rt) rt.textContent = '−' + eur(A.totRetir);
+  // legend
+  document.getElementById('a-legend').innerHTML = d.ahorro.concepts.slice(0, 7).map((c, i) => `<span><i style="background:${colorFor(i)}"></i>${esc(c.name)}</span>`).join('') +
+    (d.ahorro.concepts.length > 7 ? `<span><i style="background:${css('--sother')}"></i>Otros</span>` : '') + `<span><i style="background:${css('--neg')}"></i>Retiradas</span>`;
+  drawAhorroCharts(d, A);
+}
+function drawAhorroCharts(d, A) {
+  const base = chartBase();
+  const ah = css('--ahorro');
+  const cm = curMonthIdx();
+  // saldo
+  const saldoCfg = { type: 'line', data: { labels: MESES, datasets: [{ label: 'Saldo', data: A.acum, borderColor: ah, borderWidth: 2, fill: 'origin',
+      backgroundColor: ctx => { const { chart } = ctx; const { ctx: c, chartArea } = chart; if (!chartArea) return ah; const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom); g.addColorStop(0, ah + '55'); g.addColorStop(1, ah + '05'); return g; },
+      cubicInterpolationMode: 'monotone', pointRadius: A.acum.map((_, i) => i === 11 || i === cm ? 5 : 0), pointHoverRadius: 6, pointBackgroundColor: ah, pointBorderColor: css('--surface'), pointBorderWidth: 2 }] }, options: base };
+  upsertChart('saldo', 'c-saldo', saldoCfg);
+  // fondos (horizontal)
+  const F = A.fondos.slice().sort((a, b) => b.final - a.final);
+  const fb = chartBase();
+  fb.indexAxis = 'y';
+  fb.interaction = { mode: 'nearest', intersect: true, axis: 'y' };
+  fb.scales = { x: { ...fb.scales.y, grid: { color: css('--line'), drawTicks: false } }, y: { ...fb.scales.x, ticks: { ...fb.scales.x.ticks, color: css('--fg') } } };
+  fb.plugins.tooltip.callbacks = { label: c => { const f = F[c.dataIndex]; return [` Saldo final: ${eur(f.final)}`, ` Inicial ${eur(f.saldo)} · Aportado ${eur(f.aportado)} · Retirado ${eur(f.retirado)}`]; } };
+  upsertChart('fondos', 'c-fondos', { type: 'bar', data: { labels: F.map(f => f.name), datasets: [{ label: 'Saldo final', data: F.map(f => f.final),
+    backgroundColor: F.map(f => f.final < 0 ? css('--neg') : ah), borderRadius: 4, borderSkipped: false, barThickness: 16 }] }, options: fb });
+  // aportaciones stacked + retiradas
+  const cs = d.ahorro.concepts;
+  const ds = cs.slice(0, 7).map((c, i) => ({ label: c.name, data: c.m, backgroundColor: colorFor(i), stack: 'a', borderRadius: 0, borderColor: css('--surface'), borderWidth: { top: 1 }, maxBarThickness: 34 }));
+  if (cs.length > 7) ds.push({ label: 'Otros', data: MESES.map((_, i) => sum(cs.slice(7).map(c => c.m[i]))), backgroundColor: css('--sother'), stack: 'a', borderColor: css('--surface'), borderWidth: { top: 1 }, maxBarThickness: 34 });
+  ds.push({ label: 'Retiradas', data: A.retir.map(v => -v), backgroundColor: css('--neg'), stack: 'a', borderRadius: 4, maxBarThickness: 34 });
+  const ab = chartBase();
+  ab.scales.x.stacked = true; ab.scales.y.stacked = true;
+  ab.plugins.tooltip.filter = i => i.parsed.y !== 0;
+  ab.plugins.tooltip.callbacks.footer = items => { const i = items[0]?.dataIndex; return i == null ? '' : `Neto: ${eur(A.neto[i])}`; };
+  upsertChart('aport', 'c-aport', { type: 'bar', data: { labels: MESES, datasets: ds }, options: ab });
+}
+function upsertChart(key, id, cfg) {
+  const ch = charts[key];
+  if (ch && ch.config.type === cfg.type && ch.data.datasets.length === cfg.data.datasets.length) {
+    ch.data.labels = cfg.data.labels;
+    cfg.data.datasets.forEach((d, i) => Object.assign(ch.data.datasets[i], d));
+    ch.update('none');
+  } else mountChart(key, id, cfg);
+}
+
+/* ---------- GASTOS ---------- */
+function renderGastos(main) {
+  main.innerHTML = `
+  <section data-sec="gastos" style="display:grid;gap:20px">
+    <div class="section-head">
+      <div><span class="eyebrow">Gastos ${S.year}</span><h2>Gastos de casa</h2>
+      <p>Todos los pagos de la casa mes a mes. Añade conceptos, cambia importes y mira cuánto se va cada mes.</p></div>
+    </div>
+    <div class="kpis" id="g-kpis"></div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-head"><h3>Gasto total por mes</h3><div class="legend"><span><i style="background:var(--gastos)"></i>Total del mes</span><span><i style="background:var(--fg-3);height:2px"></i>Media mensual</span></div></div>
+        <div class="chart"><canvas id="c-gmes" aria-label="Gasto total por mes"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>En qué se va el dinero</h3><span class="hint">Total del año por concepto</span></div>
+        <div class="chart"><canvas id="c-gpie" aria-label="Reparto del gasto anual"></canvas></div>
+        <div class="legend" id="g-legend"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>Ranking de conceptos</h3><span class="hint">Total anual, de mayor a menor</span></div>
+      <div class="chart" id="g-rank-wrap"><canvas id="c-grank" aria-label="Ranking de conceptos por gasto anual"></canvas></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>Gastos por concepto y mes</h3><span class="hint">Haz clic en cualquier celda para cambiar el importe</span></div>
+      <div class="filler">
+        <div class="field"><label for="gf-c">Concepto</label><select id="gf-c"></select></div>
+        <div class="field"><label for="gf-amt">Importe</label><input id="gf-amt" class="amt" inputmode="decimal" placeholder="100"></div>
+        <div class="field"><label for="gf-mode">Es un importe…</label><select id="gf-mode"><option value="m">mensual (igual cada mes)</option><option value="t">total a repartir</option></select></div>
+        <div class="field"><label for="gf-from">Desde</label><select id="gf-from">${MESES_L.map((m, i) => `<option value="${i}">${m}</option>`).join('')}</select></div>
+        <div class="field"><label for="gf-to">Hasta</label><select id="gf-to">${MESES_L.map((m, i) => `<option value="${i}" ${i === 11 ? 'selected' : ''}>${m}</option>`).join('')}</select></div>
+        <button class="btn primary" id="gf-go">Rellenar meses</button>
+      </div>
+      <div class="table-wrap"><table class="grid" id="g-table"></table></div>
+      <div class="toolbar"><button class="btn" id="g-add">+ Añadir concepto</button></div>
+    </div>
+  </section>`;
+  const d = Y();
+  buildGastosTable(); fillGastosSelect();
+  document.getElementById('g-add').onclick = () => { d.gastos.concepts.push({ id: uid('g'), name: 'Nuevo concepto', m: Array(12).fill(0) }); scheduleSave(S.year); buildGastosTable(); fillGastosSelect(); refreshGastos(true); focusLast('#g-table tbody tr:last-child input.name'); };
+  document.getElementById('gf-go').onclick = () => {
+    const c = d.gastos.concepts.find(x => x.id === document.getElementById('gf-c').value);
+    const a = parseNum(document.getElementById('gf-amt').value), f = +document.getElementById('gf-from').value, t = +document.getElementById('gf-to').value;
+    if (!c) return toast('Elige un concepto.');
+    if (t < f) return toast('El mes final debe ser posterior al inicial.');
+    const n = t - f + 1; const per = document.getElementById('gf-mode').value === 'm' ? a : r2(a / n);
+    for (let i = f; i <= t; i++) c.m[i] = per;
+    if (document.getElementById('gf-mode').value === 't') c.m[t] = r2(c.m[t] + (a - per * n));
+    scheduleSave(S.year); buildGastosTable(); refreshGastos(true); toast(`${c.name}: ${eur(per)} de ${MESES[f]} a ${MESES[t]}`);
+  };
+  refreshGastos(true);
+}
+function fillGastosSelect() { const s = document.getElementById('gf-c'); if (s) s.innerHTML = Y().gastos.concepts.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join(''); }
+function buildGastosTable() {
+  const d = Y(), cm = curMonthIdx();
+  const t = document.getElementById('g-table');
+  t.innerHTML = `<thead><tr><th>Concepto</th>${MESES.map((m, i) => `<th class="${i === cm ? 'cur' : ''}">${m}</th>`).join('')}<th>Total año</th><th>Media/mes</th><th>% del total</th><th></th></tr></thead>
+  <tbody>${d.gastos.concepts.map(c => `<tr data-id="${c.id}">
+    <td><div class="rowname"><input class="name" data-f="name" value="${esc(c.name)}" aria-label="Nombre del concepto"></div></td>
+    ${c.m.map((v, i) => `<td class="${i === cm ? 'cur' : ''}"><input data-f="m" data-i="${i}" inputmode="decimal" value="${inVal(v)}" placeholder="0" aria-label="${esc(c.name)} ${MESES_L[i]}"></td>`).join('')}
+    <td class="calc" data-k="total"></td><td class="calc" data-k="media"></td><td class="calc" data-k="pct"></td>
+    <td><button class="del" title="Eliminar concepto" aria-label="Eliminar ${esc(c.name)}">×</button></td></tr>`).join('')}</tbody>
+  <tfoot><tr class="strong"><td>Total del mes</td>${MESES.map((_, i) => `<td class="calc" data-ft="mes" data-i="${i}"></td>`).join('')}<td class="calc" id="g-ft-total"></td><td class="calc" id="g-ft-media"></td><td class="calc">100%</td><td></td></tr></tfoot>`;
+  t.querySelectorAll('tbody tr').forEach(tr => {
+    const c = d.gastos.concepts.find(x => x.id === tr.dataset.id);
+    tr.addEventListener('input', e => {
+      const el = e.target; if (!el.dataset.f) return;
+      if (el.dataset.f === 'name') { c.name = el.value; fillGastosSelect(); }
+      else c.m[+el.dataset.i] = parseNum(el.value);
+      scheduleSave(S.year); refreshGastos(el.dataset.f === 'name');
+    });
+    tr.querySelector('.del').onclick = () => confirmBox(`¿Eliminar «${c.name}»?`, 'Se borran sus importes de este año.', 'Eliminar', () => {
+      d.gastos.concepts = d.gastos.concepts.filter(x => x !== c); scheduleSave(S.year); buildGastosTable(); fillGastosSelect(); refreshGastos(true);
+    });
+  });
+  bindGridNav(t);
+}
+function refreshGastos(full) {
+  const d = Y(); const G = calcGastos(d); const cm = curMonthIdx();
+  const media = G.total / 12;
+  const maxI = G.mes.indexOf(Math.max(...G.mes)), minI = G.mes.indexOf(Math.min(...G.mes));
+  const top = G.porConcepto.slice().sort((a, b) => b.total - a.total)[0];
+  const prevY = String(+S.year - 1); const P = S.years[prevY] ? calcGastos(S.years[prevY]) : null;
+  const delta = P && P.total ? (G.total - P.total) / P.total * 100 : null;
+  document.getElementById('g-kpis').innerHTML = `
+    <div class="kpi hero-g"><span class="label">Gasto total del año</span><span class="value">${eur(G.total)}</span>
+      ${delta !== null ? `<span class="pill ${delta > 0.5 ? 'up' : delta < -0.5 ? 'down' : 'neutral'}">${delta > 0 ? '▲' : delta < 0 ? '▼' : '='} ${Math.abs(delta).toFixed(1)}% vs ${prevY}</span>` : `<span class="sub">${d.gastos.concepts.length} conceptos</span>`}</div>
+    <div class="kpi"><span class="label">Media mensual</span><span class="value">${eur(media)}</span><span class="sub">${eur(media / 30.4)} al día</span></div>
+    ${cm >= 0 ? `<div class="kpi"><span class="label">Gasto de ${MESES_L[cm].toLowerCase()}</span><span class="value">${eur(G.mes[cm])}</span><span class="sub">${G.mes[cm] > media ? 'Por encima' : 'Por debajo'} de la media</span></div>` : ''}
+    <div class="kpi"><span class="label">Mes más caro</span><span class="value">${eur(G.mes[maxI])}</span><span class="sub">${MESES_L[maxI]} · el más barato, ${MESES_L[minI].toLowerCase()} (${eur0(G.mes[minI])})</span></div>
+    <div class="kpi"><span class="label">Concepto principal</span><span class="value" title="${esc(top?.name)}">${esc(top?.name || '—')}</span><span class="sub">${top ? eur(top.total) + ' · ' + (G.total ? (top.total / G.total * 100).toFixed(1) : 0) + '% del total' : ''}</span></div>`;
+  const t = document.getElementById('g-table');
+  G.porConcepto.forEach(p => { const tr = t.querySelector(`tr[data-id="${p.id}"]`); if (!tr) return;
+    tr.querySelector('[data-k="total"]').textContent = eur(p.total);
+    tr.querySelector('[data-k="media"]').textContent = eur(p.total / 12);
+    tr.querySelector('[data-k="pct"]').textContent = G.total ? (p.total / G.total * 100).toFixed(1) + '%' : '—'; });
+  t.querySelectorAll('[data-ft="mes"]').forEach(td => td.textContent = eur(G.mes[+td.dataset.i]));
+  document.getElementById('g-ft-total').textContent = eur(G.total);
+  document.getElementById('g-ft-media').textContent = eur(media);
+  drawGastosCharts(G, full);
+}
+function drawGastosCharts(G, full) {
+  const ga = css('--gastos'); const cm = curMonthIdx();
+  const media = G.total / 12;
+  const mb = chartBase();
+  mb.plugins.tooltip.callbacks.footer = items => { const v = items[0]?.parsed.y; return v == null ? '' : `${v >= media ? '+' : ''}${eur(v - media)} vs media`; };
+  mb.plugins.tooltip.filter = i => i.datasetIndex === 0;
+  const maxI = G.mes.indexOf(Math.max(...G.mes));
+  upsertChart('gmes', 'c-gmes', { type: 'bar', data: { labels: MESES, datasets: [
+    { label: 'Total', data: G.mes, backgroundColor: G.mes.map((_, i) => i === maxI || i === cm ? ga : ga + 'a6'), borderRadius: 4, maxBarThickness: 36, order: 2 },
+    { type: 'line', label: 'Media', data: MESES.map(() => r2(media)), borderColor: css('--fg-3'), borderDash: [5, 4], borderWidth: 1.5, pointRadius: 0, order: 1 } ] }, options: mb });
+  // donut: top 7 + otros
+  const sorted = G.porConcepto.slice().sort((a, b) => b.total - a.total).filter(p => p.total > 0);
+  const top = sorted.slice(0, 7), rest = sum(sorted.slice(7).map(p => p.total));
+  const labels = top.map(p => p.name).concat(rest ? ['Resto'] : []);
+  const vals = top.map(p => p.total).concat(rest ? [rest] : []);
+  const cols = top.map((_, i) => SERIES()[i]).concat(rest ? [css('--sother')] : []);
+  const pb = { responsive: true, maintainAspectRatio: false, cutout: '64%', animation: { duration: 250 }, plugins: { legend: { display: false }, tooltip: { ...chartBase().plugins.tooltip, callbacks: { label: c => ` ${c.label}: ${eur(c.parsed)} (${(c.parsed / G.total * 100).toFixed(1)}%)` } } } };
+  upsertChart('gpie', 'c-gpie', { type: 'doughnut', data: { labels, datasets: [{ data: vals, backgroundColor: cols, borderColor: css('--surface'), borderWidth: 2 }] }, options: pb });
+  document.getElementById('g-legend').innerHTML = labels.map((l, i) => `<span><i style="background:${cols[i]}"></i>${esc(l)} <span class="num" style="color:var(--fg-3)">${(vals[i] / G.total * 100).toFixed(0)}%</span></span>`).join('');
+  // ranking
+  const rk = G.porConcepto.slice().sort((a, b) => b.total - a.total);
+  const wrap = document.getElementById('g-rank-wrap'); wrap.style.height = Math.max(200, rk.length * 24 + 40) + 'px';
+  const rb = chartBase(); rb.indexAxis = 'y'; rb.interaction = { mode: 'nearest', intersect: true, axis: 'y' };
+  rb.scales = { x: { ...rb.scales.y, position: 'top' }, y: { ...rb.scales.x, ticks: { ...rb.scales.x.ticks, color: css('--fg'), autoSkip: false } } };
+  rb.plugins.tooltip.callbacks = { label: c => ` ${eur(c.parsed.x)} al año · ${eur(c.parsed.x / 12)} al mes` };
+  upsertChart('grank', 'c-grank', { type: 'bar', data: { labels: rk.map(p => p.name), datasets: [{ label: 'Total', data: rk.map(p => p.total), backgroundColor: ga, borderRadius: 4, borderSkipped: false, barThickness: 14 }] }, options: rb });
+  if (full && charts.grank) charts.grank.resize();
+}
+
+/* ---------- COMPARATIVA ---------- */
+function renderComparar(main) {
+  const ys = yearList();
+  const yc = y => SERIES()[ys.indexOf(y) % 8];
+  main.innerHTML = `
+  <section data-sec="comparar" style="display:grid;gap:20px">
+    <div class="section-head">
+      <div><span class="eyebrow">Comparativa</span><h2>Año contra año</h2>
+      <p>Elige los años que quieres comparar. Los conceptos se emparejan por nombre, así que mantén el mismo nombre de un año a otro.</p></div>
+      <div class="yearchips" id="cmp-chips">${ys.map(y => `<button class="chip" data-y="${y}" aria-pressed="${S.compareSel.includes(y)}"><i style="background:${yc(y)}"></i>${y}</button>`).join('')}</div>
+    </div>
+    ${ys.length < 2 ? `<div class="panel" style="border-style:dashed"><div class="panel-head"><h3>Solo hay un año guardado</h3></div><p class="muted" style="margin:0;font-size:13px">Cuando crees ${+ys[0] + 1} con el botón «+ Año» (puedes copiar los conceptos de ${ys[0]}), aquí verás la evolución de un año a otro. De momento se muestra ${ys[0]} como referencia.</p></div>` : ''}
+    <div class="kpis" id="cmp-kpis"></div>
+    <div class="grid-2 even">
+      <div class="panel"><div class="panel-head"><h3>Gasto mensual por año</h3><div class="legend" id="cmp-leg1"></div></div><div class="chart"><canvas id="c-cmp-g"></canvas></div></div>
+      <div class="panel"><div class="panel-head"><h3>Saldo de ahorro acumulado por año</h3><div class="legend" id="cmp-leg2"></div></div><div class="chart"><canvas id="c-cmp-a"></canvas></div></div>
+    </div>
+    <div class="panel"><div class="panel-head"><h3>Totales anuales</h3><div class="legend"><span><i style="background:var(--gastos)"></i>Gastos de casa</span><span><i style="background:var(--ahorro)"></i>Aportado al ahorro</span></div></div><div class="chart"><canvas id="c-cmp-t"></canvas></div></div>
+    <div class="panel"><div class="panel-head"><h3>Gastos por concepto</h3><span class="hint">Total anual · la variación compara los dos últimos años elegidos</span></div><div class="table-wrap"><table class="grid simple" id="cmp-g"></table></div></div>
+    <div class="panel"><div class="panel-head"><h3>Ahorro por fondo</h3><span class="hint">Aportado en el año</span></div><div class="table-wrap"><table class="grid simple" id="cmp-a"></table></div></div>
+  </section>`;
+  document.querySelectorAll('#cmp-chips .chip').forEach(b => b.onclick = () => {
+    const y = b.dataset.y; const on = S.compareSel.includes(y);
+    if (on && S.compareSel.length === 1) return;
+    S.compareSel = on ? S.compareSel.filter(x => x !== y) : S.compareSel.concat(y).sort();
+    render();
+  });
+  const sel = S.compareSel.slice().sort();
+  const GA = Object.fromEntries(sel.map(y => [y, calcGastos(S.years[y])]));
+  const AA = Object.fromEntries(sel.map(y => [y, calcAhorro(S.years[y])]));
+  const last = sel[sel.length - 1], prev = sel[sel.length - 2];
+  const dpct = (a, b) => b ? (a - b) / b * 100 : null;
+  const pill = (v, invert) => v === null || !isFinite(v) ? '<span class="pill neutral">—</span>' : `<span class="pill ${Math.abs(v) < .5 ? 'neutral' : (v > 0) !== !!invert ? 'up' : 'down'}">${v > 0 ? '▲' : v < 0 ? '▼' : '='} ${Math.abs(v).toFixed(1)}%</span>`;
+  document.getElementById('cmp-kpis').innerHTML = `
+    <div class="kpi hero-g"><span class="label">Gastos ${last}</span><span class="value">${eur(GA[last].total)}</span>${prev ? pill(dpct(GA[last].total, GA[prev].total)) + `<span class="sub">frente a ${eur(GA[prev].total)} en ${prev}</span>` : '<span class="sub">Sin año anterior para comparar</span>'}</div>
+    <div class="kpi"><span class="label">Media mensual ${last}</span><span class="value">${eur(GA[last].total / 12)}</span>${prev ? `<span class="sub">${eur(GA[prev].total / 12)} en ${prev}</span>` : ''}</div>
+    <div class="kpi hero"><span class="label">Aportado al ahorro ${last}</span><span class="value">${eur(AA[last].totAport)}</span>${prev ? pill(dpct(AA[last].totAport, AA[prev].totAport), true) + `<span class="sub">frente a ${eur(AA[prev].totAport)} en ${prev}</span>` : ''}</div>
+    <div class="kpi"><span class="label">Saldo final ${last}</span><span class="value">${eur(AA[last].final)}</span>${prev ? `<span class="sub">${eur(AA[prev].final)} en ${prev}</span>` : ''}</div>`;
+  const leg = sel.map(y => `<span><i style="background:${yc(y)}"></i>${y}</span>`).join('');
+  document.getElementById('cmp-leg1').innerHTML = leg; document.getElementById('cmp-leg2').innerHTML = leg;
+  const lb = chartBase();
+  mountChart('cmpg', 'c-cmp-g', { type: 'line', data: { labels: MESES, datasets: sel.map(y => ({ label: y, data: GA[y].mes, borderColor: yc(y), backgroundColor: yc(y), borderWidth: 2, cubicInterpolationMode: 'monotone', pointRadius: 3, pointHoverRadius: 6 })) }, options: lb });
+  mountChart('cmpa', 'c-cmp-a', { type: 'line', data: { labels: MESES, datasets: sel.map(y => ({ label: y, data: AA[y].acum, borderColor: yc(y), backgroundColor: yc(y), borderWidth: 2, cubicInterpolationMode: 'monotone', pointRadius: 3, pointHoverRadius: 6 })) }, options: chartBase() });
+  mountChart('cmpt', 'c-cmp-t', { type: 'bar', data: { labels: sel, datasets: [
+    { label: 'Gastos de casa', data: sel.map(y => GA[y].total), backgroundColor: css('--gastos'), borderRadius: 4, maxBarThickness: 48 },
+    { label: 'Aportado al ahorro', data: sel.map(y => AA[y].totAport), backgroundColor: css('--ahorro'), borderRadius: 4, maxBarThickness: 48 } ] }, options: chartBase() });
+  // concept tables
+  const tableBy = (id, getRows, invert) => {
+    const map = new Map();
+    sel.forEach(y => getRows(y).forEach(r => { const k = normName(r.name); if (!k) return; if (!map.has(k)) map.set(k, { name: r.name, v: {} }); map.get(k).v[y] = r2((map.get(k).v[y] || 0) + r.total); }));
+    const rows = [...map.values()].sort((a, b) => (b.v[last] || 0) - (a.v[last] || 0));
+    const tot = Object.fromEntries(sel.map(y => [y, sum(rows.map(r => r.v[y] || 0))]));
+    document.getElementById(id).innerHTML = `<thead><tr><th>Concepto</th>${sel.map(y => `<th>${y}</th>`).join('')}${prev ? `<th>Diferencia</th><th>Variación</th>` : ''}</tr></thead>
+      <tbody>${rows.map(r => `<tr><td class="calc" style="text-align:left">${esc(r.name)}</td>${sel.map(y => `<td class="calc">${r.v[y] != null ? eur(r.v[y]) : '<span class="muted">—</span>'}</td>`).join('')}
+      ${prev ? `<td class="calc ${(r.v[last] || 0) - (r.v[prev] || 0) > 0 ? (invert ? 'pos' : 'neg') : ''}">${eur((r.v[last] || 0) - (r.v[prev] || 0))}</td><td class="calc">${pill(r.v[prev] ? dpct(r.v[last] || 0, r.v[prev]) : null, invert)}</td>` : ''}</tr>`).join('')}</tbody>
+      <tfoot><tr class="strong"><td>Total</td>${sel.map(y => `<td class="calc">${eur(tot[y])}</td>`).join('')}${prev ? `<td class="calc">${eur(tot[last] - tot[prev])}</td><td class="calc">${pill(dpct(tot[last], tot[prev]), invert)}</td>` : ''}</tr></tfoot>`;
+  };
+  tableBy('cmp-g', y => GA[y].porConcepto, false);
+  tableBy('cmp-a', y => AA[y].fondos.map(f => ({ name: f.name, total: f.aportado })), true);
+}
+
+/* ---------- Grid keyboard nav ---------- */
+function bindGridNav(t) {
+  t.addEventListener('keydown', e => {
+    const el = e.target; if (el.tagName !== 'INPUT') return;
+    const td = el.closest('td'), tr = el.closest('tr');
+    const col = [...tr.children].indexOf(td);
+    let target = null;
+    if (e.key === 'Enter' || e.key === 'ArrowDown') target = tr.nextElementSibling?.children[col]?.querySelector('input');
+    else if (e.key === 'ArrowUp') target = tr.previousElementSibling?.children[col]?.querySelector('input');
+    if (target) { e.preventDefault(); target.focus(); target.select(); }
+  });
+  t.addEventListener('focusin', e => { if (e.target.tagName === 'INPUT' && !e.target.classList.contains('name')) setTimeout(() => e.target.select(), 0); });
+}
+function focusLast(sel) { const el = document.querySelector(sel); if (el) { el.focus(); el.select(); } }
+
+/* ---------- Modals ---------- */
+function modal(html, bind) {
+  const bg = document.createElement('div'); bg.className = 'modal-bg'; bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true">${html}</div>`;
+  document.body.appendChild(bg);
+  const close = () => bg.remove();
+  bg.addEventListener('click', e => { if (e.target === bg) close(); });
+  bg.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  bind(bg, close);
+  const f = bg.querySelector('input, select, button.primary'); if (f) f.focus();
+}
+function confirmBox(title, text, okLabel, onOk) {
+  modal(`<h3>${esc(title)}</h3><p class="muted" style="margin:0;font-size:14px">${esc(text)}</p><div class="row"><button class="btn" data-x>Cancelar</button><button class="btn primary danger" data-ok style="background:var(--neg);border-color:var(--neg);color:#fff">${esc(okLabel)}</button></div>`,
+    (bg, close) => { bg.querySelector('[data-x]').onclick = close; bg.querySelector('[data-ok]').onclick = () => { close(); onOk(); }; });
+}
+function openNewYear() {
+  const ys = yearList();
+  const next = ys.length ? Math.max(...ys.map(Number)) + 1 : NOW.getFullYear();
+  modal(`<h3>Nuevo año</h3>
+    <div class="field"><label for="ny-y">Año</label><input id="ny-y" type="number" value="${next}" min="2000" max="2100"></div>
+    <div class="field"><label for="ny-src">Partir de</label><select id="ny-src"><option value="">Año vacío</option>${ys.slice().reverse().map(y => `<option value="${y}" ${y === ys[ys.length - 1] ? 'selected' : ''}>Copiar conceptos de ${y}</option>`).join('')}</select></div>
+    <label class="check"><input type="checkbox" id="ny-amt" checked> Copiar también los importes de cada mes</label>
+    <label class="check"><input type="checkbox" id="ny-saldo" checked> El saldo inicial de cada fondo es su saldo final del año copiado</label>
+    <p class="muted" style="margin:0">Las retiradas no se copian: cada año tiene las suyas.</p>
+    <div class="row"><button class="btn" data-x>Cancelar</button><button class="btn primary" data-ok>Crear año</button></div>`,
+  (bg, close) => {
+    const srcSel = bg.querySelector('#ny-src');
+    const sync = () => { const has = !!srcSel.value; bg.querySelector('#ny-amt').disabled = !has; bg.querySelector('#ny-saldo').disabled = !has; };
+    srcSel.onchange = sync; sync();
+    bg.querySelector('[data-x]').onclick = close;
+    bg.querySelector('[data-ok]').onclick = () => {
+      const y = String(parseInt(bg.querySelector('#ny-y').value, 10));
+      if (!/^\d{4}$/.test(y)) return toast('Escribe un año de cuatro cifras.');
+      if (S.years[y]) return toast(`El año ${y} ya existe.`);
+      const src = srcSel.value ? S.years[srcSel.value] : null;
+      const amt = bg.querySelector('#ny-amt').checked, carry = bg.querySelector('#ny-saldo').checked;
+      let nd;
+      if (src) {
+        const A = calcAhorro(src);
+        nd = normalizeYear({ year: +y,
+          ahorro: { concepts: src.ahorro.concepts.map(c => ({ id: c.id, name: c.name, saldo: carry ? A.fondos.find(f => f.id === c.id).final : 0, m: amt ? c.m.slice() : [] })), retiradas: [] },
+          gastos: { concepts: src.gastos.concepts.map(c => ({ id: c.id, name: c.name, m: amt ? c.m.slice() : [] })) } }, y);
+      } else nd = normalizeYear({ year: +y, ahorro: { concepts: [{ name: 'Vacaciones' }, { name: 'Navidad' }], retiradas: [] }, gastos: { concepts: [{ name: 'Alquiler / hipoteca' }, { name: 'Comida' }, { name: 'Luz' }] } }, y);
+      S.years[y] = nd; S.year = y; saveUI();
+      if (!S.compareSel.includes(y)) S.compareSel = S.compareSel.concat(y).sort();
+      scheduleSave(y); close(); renderYearSel(); render(); toast(`Año ${y} creado`);
+    };
+  });
+}
+function openDataMenu() {
+  modal(`<h3>Datos</h3>
+    <p class="muted" style="margin:0;font-size:13px">${S.mode === 'db' ? 'Tus datos se guardan en este dashboard y se sincronizan en todos tus dispositivos.' : 'Tus datos se guardan en este navegador. Exporta una copia de vez en cuando para no perderlos.'}</p>
+    <div class="toolbar">
+      <button class="btn" data-exp>Exportar copia (.json)</button>
+      <button class="btn" data-imp>Importar (.json)</button>
+    </div>
+    ${S.year ? `<hr style="border:0;border-top:1px solid var(--line);margin:0"><div class="toolbar"><button class="btn danger" data-del>Eliminar el año ${S.year}</button></div>` : ''}
+    <div class="row"><button class="btn" data-x>Cerrar</button></div>`,
+  (bg, close) => {
+    bg.querySelector('[data-x]').onclick = close;
+    bg.querySelector('[data-exp]').onclick = () => { close(); exportData(); };
+    bg.querySelector('[data-imp]').onclick = () => { close(); document.getElementById('importFile').click(); };
+    const del = bg.querySelector('[data-del]');
+    if (del) del.onclick = () => { close(); const y = S.year; confirmBox(`¿Eliminar el año ${y}?`, 'Se borran todos sus fondos, retiradas y gastos. No se puede deshacer.', 'Eliminar año', async () => { await deleteYearStore(y); S.year = null; afterDataChange(); toast(`Año ${y} eliminado`); }); };
+  });
+}
+async function exportData() {
+  const text = JSON.stringify({ app: 'finanzas-casa', version: 1, years: S.years }, null, 1);
+  const filename = `finanzas-casa-${new Date().toISOString().slice(0, 10)}.json`;
+  if (S.downloads) {
+    try { await S.downloads.save({ filename, data: text }); return; } catch (e) { toast('No se descargó la copia.'); return; }
+  }
+  try {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' })); a.download = filename;
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  } catch (e) { toast('Este navegador no permite descargar el archivo.'); }
+}
+document.getElementById('importFile').addEventListener('change', e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const j = JSON.parse(rd.result);
+      let years = {};
+      if (j.years) years = j.years; else if (j.year) years[String(j.year)] = j; else throw new Error('formato');
+      const ks = Object.keys(years).filter(k => /^\d{4}$/.test(k));
+      if (!ks.length) throw new Error('vacío');
+      const clash = ks.filter(k => S.years[k]);
+      const apply = () => { ks.forEach(k => { S.years[k] = normalizeYear(years[k], k); scheduleSave(k); }); S.year = ks.sort()[ks.length - 1]; S.compareSel = null; afterDataChange(); toast(`Importado: ${ks.join(', ')}`); };
+      if (clash.length) confirmBox(`¿Sustituir ${clash.join(', ')}?`, 'Ya tienes datos de ese año. Los del archivo los reemplazarán.', 'Sustituir', apply); else apply();
+    } catch (err) { toast('El archivo no tiene el formato de este dashboard.'); }
+  };
+  rd.readAsText(f);
+});
+
+let toastT;
+function toast(msg) {
+  let el = document.querySelector('.toast'); if (!el) { el = document.createElement('div'); el.className = 'toast'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
+  el.textContent = msg; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => el.hidden = true, 2600);
+}
+
+/* ---------- Wiring ---------- */
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => { S.tab = t.dataset.tab; saveUI(); render(); });
+document.getElementById('yearSel').onchange = e => { S.year = e.target.value; saveUI(); render(); };
+document.getElementById('newYearBtn').onclick = openNewYear;
+document.getElementById('moreBtn').onclick = openDataMenu;
+const rerenderTheme = () => { if (S.ready) render(); };
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', rerenderTheme);
+new MutationObserver(rerenderTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+if (window.Chart) { Chart.defaults.font.family = 'IBM Plex Sans, system-ui, sans-serif'; }
+
+renderTabs();
+initStore();
+})();
+</script>
